@@ -27,9 +27,12 @@
     <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <!-- Link to pep.js to ensure pointer events work consistently in all browsers -->
     <script src="https://code.jquery.com/pep/0.4.1/pep.js"></script>
+
+    <link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet">
 </head>
 
 <body>
+    <input type="file">
     <canvas id="renderCanvas"></canvas>
     <script>
         window.addEventListener('DOMContentLoaded', function () {
@@ -72,6 +75,30 @@
             });
         });
     </script>
+    <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
+
+    <script>
+        function onFileUpload(error, fileWrapper) {
+            if (window.File && window.FileReader && window.FileList && window.Blob) {
+                var reader = new FileReader();
+
+                reader.onload = function() { processFile(reader.result) };
+                reader.readAsText(fileWrapper.file);
+            } else {
+                alert('The File APIs are not fully supported in this browser.');
+            }
+        }
+
+        function processFile(text) {
+            console.log(text);
+        }
+
+        var inputElement = document.querySelector('input[type="file"]');
+        var pond = FilePond.create(inputElement);
+
+        pond.onaddfile = onFileUpload;
+    </script>
+
 </body>
 
 </html>
