@@ -3,6 +3,13 @@
     <div class="chart-container__container">
       <line-chart :options="options" :chart-data="data"></line-chart>
     </div>
+    <div class="chart-container__chips">
+      <vs-switch class="chart-container__switch" v-model="isN">
+        <span slot="on">n</span>
+        <span slot="off">t</span>
+      </vs-switch>
+    </div>
+    <vs-slider class="chart-container__slider" ticks step="1" max=100 v-model="slider"/>
   </div>
 </template>
 
@@ -67,6 +74,8 @@ export default {
   },
   data() {
     return {
+      slider: 0,
+      isN: false,
       data: {
         labels: [
           "January",
@@ -196,10 +205,30 @@ export default {
   display: flex;
   align-items: center;
   padding: 24px 24px;
+  flex-wrap: wrap;
 
   &__container {
     width: 400px;
     position: relative;
+  }
+
+  &__chips {
+    width: calc(100% - 400px);
+    display: flex;
+    height: 400px;
+    padding-top: 36px;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: column;
+  }
+
+  &__switch {
+    transform: scale(1.5);
+    font-size: 17px;
+  }
+
+  &__slider.con-vs-slider {
+    margin-top: 32px;
   }
 }
 </style>

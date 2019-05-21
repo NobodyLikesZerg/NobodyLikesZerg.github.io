@@ -1,67 +1,131 @@
 <template>
-  <canvas id="graph" />
+  <canvas id="graph"/>
 </template>
 
 <script>
 import * as BABYLON from "babylonjs";
 
 export default {
-  mounted() {
-    var canvas = this.$el;
-    var engine = new BABYLON.Engine(canvas, true);
-    var createScene = function() {
-      // Create a basic BJS Scene object.
+  props: {
+    data: {
+      type: String,
+      default: null
+    }
+  },
+  watch: {
+    data: {
+      immediate: true,
+      handler(value) {
+        console.log(value);
+        if (value != null) {
+          const parsed = this.parseGraph(value);
+          const paths = this.createPathes(parsed);
+          const scene = this.createScene(paths);
+        }
+      }
+    }
+  },
+  methods: {
+    createScene(tubePathes) {
+      var canvas = this.$el;
+      var engine = new BABYLON.Engine(canvas, true);
       var scene = new BABYLON.Scene(engine);
 
-      // Create a FreeCamera, and set its position to (x:0, y:5, z:-10).
-      var camera = new BABYLON.FreeCamera(
-        "camera",
-        new BABYLON.Vector3(0, 5, -10),
+      var camera = new BABYLON.ArcRotateCamera(
+        "Camera",
+        (3 * Math.PI) / 2,
+        (3 * Math.PI) / 8,
+        30,
+        BABYLON.Vector3.Zero(),
         scene
       );
 
-      // Target the camera to scene origin.
-      camera.setTarget(BABYLON.Vector3.Zero());
+      camera.attachControl(canvas, true);
 
-      // Attach the camera to the canvas.
-      camera.attachControl(canvas, false);
-
-      // Create a basic light, aiming 0,1,0 - meaning, to the sky.
       var light = new BABYLON.HemisphericLight(
-        "light1",
-        new BABYLON.Vector3(0, 1, 0),
+        "hemi",
+        new BABYLON.Vector3(0, 50, 0),
         scene
       );
+      for (var path of tubePathes) {
+        BABYLON.MeshBuilder.CreateTube(
+          "tube",
+          {
+            path: path,
+            radius: 0.05,
+            sideOrientation: BABYLON.Mesh.DOUBLESIDE,
+            updatable: true
+          },
+          scene
+        );
+      }
+      engine.runRenderLoop(function() {
+        scene.render();
+      });
 
-      // Create a built-in "sphere" shape.
-      var sphere = BABYLON.MeshBuilder.CreateSphere(
-        "sphere",
-        { segments: 16, diameter: 2 },
-        scene
-      );
+      window.addEventListener("resize", function() {
+        engine.resize();
+      });
+    },
 
-      // Move the sphere upward 1/2 of its height.
-      sphere.position.y = 1;
+    createPathes(edges) {
+      var pathes = [];
+      for (var edge of edges) {
+        pathes.push(this.createPath(edge));
+      }
+      return pathes;
+    },
 
-      // Create a built-in "ground" shape.
-      var ground = BABYLON.MeshBuilder.CreateGround(
-        "ground1",
-        { height: 6, width: 6, subdivisions: 2 },
-        scene
-      );
+    createPath(edge) {
+      var vectors = [];
+      if (edge.length > 3) {
+        var a = Math.floor(edge.length / 3);
+        var b = Math.floor((edge.length / 3) * 2);
+        var c = edge.length - 1;
+        vectors.push(new BABYLON.Vector3(edge[0][0], edge[0][1], edge[0][2]));
+        vectors.push(new BABYLON.Vector3(edge[a][0], edge[a][1], edge[a][2]));
+        vectors.push(new BABYLON.Vector3(edge[b][0], edge[b][1], edge[b][2]));
+        vectors.push(new BABYLON.Vector3(edge[c][0], edge[c][1], edge[c][2]));
+        return BABYLON.Curve3.CreateCubicBezier(
+          vectors[0],
+          vectors[1],
+          vectors[2],
+          vectors[3],
+          edge.length
+        ).getPoints();
+      }
+      for (var p of edge) {
+        vectors.push(new BABYLON.Vector3(p[0], p[1], p[2]));
+      }
+      return BABYLON.Curve3.CreateCatmullRomSpline(vectors, 1).getPoints();
+    },
 
-      // Return the created scene.
-      return scene;
-    };
-
-    var scene = createScene();
-    engine.runRenderLoop(function() {
-      scene.render();
-    });
-
-    window.addEventListener("resize", function() {
-      engine.resize();
-    });
+    parseGraph(text) {
+      var lines = text.split("\n");
+      var edges = [];
+      var edge = [];
+      for (var i = 0; i < lines.length; i++) {
+        var words = lines[i].split(" ");
+        if (words.length == 2) {
+          if (edge.length > 1) {
+            edges.push(edge);
+          }
+          edge = [];
+        }
+        if (words.length == 4) {
+          edge.push([
+            parseFloat(words[0]),
+            parseFloat(words[1]),
+            parseFloat(words[2]),
+            parseFloat(words[3])
+          ]);
+        }
+      }
+      if (edge.length > 1) {
+        edges.push(edge);
+      }
+      return edges;
+    }
   }
 };
 </script>

@@ -4,8 +4,8 @@
       <chart-container />
     </side-bar>
     <div class="container">
-      <file-uploader />
-      <graph />
+      <file-uploader @input="fileContent = $event" />
+      <graph :data="fileContent" />
     </div>
   </div>
 </template>
@@ -18,6 +18,11 @@ import ChartContainer from './components/ChartContainer';
 
 export default {
   name: "app",
+  data() {
+    return {
+      fileContent: null,
+    };
+  },
   components: {
     Graph,
     FileUploader,

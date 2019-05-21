@@ -22,7 +22,7 @@ export default {
   },
 
   methods: {
-    onFileUpload(fileWrapper) {
+    onFileUpload(error, fileWrapper) {
       if (window.File && window.FileReader && window.FileList && window.Blob) {
         const reader = new FileReader();
 
