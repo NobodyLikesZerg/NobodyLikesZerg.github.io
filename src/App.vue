@@ -1,18 +1,29 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png" />
-    <HelloWorld msg="Welcome to Your Vue.js App" />
+  <div class="app-container">
+    <side-bar>
+      <chart-container />
+    </side-bar>
+    <div class="container">
+      <file-uploader />
+      <graph />
+    </div>
   </div>
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld.vue";
+import SideBar from './components/SideBar';
+import Graph from "./components/Graph";
+import FileUploader from './components/FileUploader';
+import ChartContainer from './components/ChartContainer';
 
 export default {
   name: "app",
   components: {
-    HelloWorld
-  }
+    Graph,
+    FileUploader,
+    SideBar,
+    ChartContainer,
+  },
 };
 </script>
 
@@ -24,5 +35,23 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+
+.app-container {
+  height: 100%;
+}
+
+.container {
+  width: calc(100% - 400px);
+  height: 100%;
+}
+
+html,
+body {
+  /* overflow: hidden; */
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 </style>
