@@ -48,20 +48,25 @@ export default {
                 new BABYLON.Vector3(0, 50, 0),
                 scene
             );
+            var materialBox = new BABYLON.StandardMaterial("texture1", scene);
+            materialBox.diffuseColor = new BABYLON.Color3(0.7, 0, 0); //Green
+
             for (var pathWithRadius of pathesWithRadiuses) {
-                BABYLON.MeshBuilder.CreateTube(
+                var mesh = BABYLON.MeshBuilder.CreateTube(
                     "tube", {
                         path: pathWithRadius[0],
-                        radius: 0.05,
+                        radius: 0.075,
                         sideOrientation: BABYLON.Mesh.DOUBLESIDE,
                         updatable: true
                     },
                     scene
                 );
+                mesh.material = materialBox
             }
             for (var sphere of spheres) {
-                var mesh = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 0.1 }, scene);
+                var mesh = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 0.15 }, scene);
                 mesh.position = new BABYLON.Vector3(sphere[0], sphere[1], sphere[2]);
+                mesh.material = materialBox
             }
             engine.runRenderLoop(function() {
                 scene.render();
