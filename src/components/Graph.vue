@@ -19,14 +19,15 @@ export default {
                 if (value != null) {
                     const parsed = this.parseGraph(value);
                     const centered = this.centerGraph(parsed)
-                    const paths = this.createPathes(centered);
-                    const scene = this.createScene(paths);
+                    const pathsWithRadiuses = this.createPathsWithRadiuses(centered);
+                    const spheres = this.createSpheres(centered)
+                    const scene = this.createScene(pathsWithRadiuses, spheres);
                 }
             }
         }
     },
     methods: {
-        createScene(tubePathes) {
+        createScene(pathesWithRadiuses, spheres) {
             var canvas = this.$el;
             var engine = new BABYLON.Engine(canvas, true);
             var scene = new BABYLON.Scene(engine);
@@ -47,16 +48,20 @@ export default {
                 new BABYLON.Vector3(0, 50, 0),
                 scene
             );
-            for (var path of tubePathes) {
+            for (var pathWithRadius of pathesWithRadiuses) {
                 BABYLON.MeshBuilder.CreateTube(
                     "tube", {
-                        path: path,
+                        path: pathWithRadius[0],
                         radius: 0.05,
                         sideOrientation: BABYLON.Mesh.DOUBLESIDE,
                         updatable: true
                     },
                     scene
                 );
+            }
+            for (var sphere of spheres) {
+                var mesh = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 0.1 }, scene);
+                mesh.position = new BABYLON.Vector3(sphere[0], sphere[1], sphere[2]);
             }
             engine.runRenderLoop(function() {
                 scene.render();
@@ -67,15 +72,21 @@ export default {
             });
         },
 
-        createPathes(edges) {
-            var pathes = [];
-            for (var edge of edges) {
-                pathes.push(this.createPath(edge));
-            }
-            return pathes;
+        createSpheres(edges) {
+            var spheres = [edges.map(edge => edge[0]), edges.map(edge => edge[edge.length - 1])].flat(1);
+            console.log(spheres);
+            return spheres;
         },
 
-        createPath(edge) {
+        createPathsWithRadiuses(edges) {
+            var pathsWithRadius = [];
+            for (var edge of edges) {
+                pathsWithRadius.push(this.createPathWithRadius(edge));
+            }
+            return pathsWithRadius;
+        },
+
+        createPathWithRadius(edge) {
             var vectors = [];
             if (edge.length > 3) {
                 var a = Math.floor(edge.length / 3);
@@ -85,18 +96,20 @@ export default {
                 vectors.push(new BABYLON.Vector3(edge[a][0], edge[a][1], edge[a][2]));
                 vectors.push(new BABYLON.Vector3(edge[b][0], edge[b][1], edge[b][2]));
                 vectors.push(new BABYLON.Vector3(edge[c][0], edge[c][1], edge[c][2]));
-                return BABYLON.Curve3.CreateCubicBezier(
+                return [BABYLON.Curve3.CreateCubicBezier(
                     vectors[0],
                     vectors[1],
                     vectors[2],
                     vectors[3],
                     edge.length
-                ).getPoints();
+                ).getPoints(), edge.map(p => p[3]).reduce((sum, r) => sum + r) / edge.length];
             }
             for (var p of edge) {
                 vectors.push(new BABYLON.Vector3(p[0], p[1], p[2]));
             }
-            return BABYLON.Curve3.CreateCatmullRomSpline(vectors, 1).getPoints();
+            return [BABYLON.Curve3.CreateCatmullRomSpline(vectors, 1).getPoints(),
+                edge.map(p => p[3]).reduce((sum, r) => sum + r) / edge.length
+            ];
         },
 
         centerGraph(edges) {
@@ -104,9 +117,7 @@ export default {
             var cX = points.map(p => p[0]).reduce((summ, x) => summ + x) / points.length;
             var cY = points.map(p => p[1]).reduce((summ, x) => summ + x) / points.length;
             var cZ = points.map(p => p[2]).reduce((summ, x) => summ + x) / points.length;
-            console.log(edges)
-            var res = edges.map(edge => edge.map(p => [p[0] - cX, p[1] - cY, p[2] - cZ]));
-            console.log(res)
+            var res = edges.map(edge => edge.map(p => [p[0] - cX, p[1] - cY, p[2] - cZ, p[3]]));
             return res
         },
 
