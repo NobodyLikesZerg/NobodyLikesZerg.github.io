@@ -1,4 +1,4 @@
-import { Line, mixins } from 'vue-chartjs';
+import { Scatter, Line, mixins } from 'vue-chartjs';
 
 
 export default {

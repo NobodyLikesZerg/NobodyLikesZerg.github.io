@@ -1,4 +1,4 @@
-<template>
+<template functional>
   <vs-sidebar
     class="app-sidebar"
     parent="body"
@@ -7,26 +7,17 @@
     default-index="1"
     color="primary"
     spacer
-    v-model="active"
+    :value="props.value"
   >
     <slot />
   </vs-sidebar>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      active: true
-    };
-  }
-};
-</script>
-
 <style lang="stylus">
 .app-sidebar {
   .vs-sidebar {
     max-width: 600px;
+    overflow-y: scroll;
   }
 }
 </style>

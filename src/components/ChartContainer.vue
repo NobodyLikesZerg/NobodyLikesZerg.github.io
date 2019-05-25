@@ -1,57 +1,75 @@
 <template>
   <div class="chart-container">
+    <vs-divider class="chart-container__header">Давление</vs-divider>
     <div class="chart-container__container">
-      <line-chart :options="options" :chart-data="data"></line-chart>
+      <line-chart :options="options" :chart-data="chartData"></line-chart>
     </div>
     <div class="chart-container__chips">
-      <vs-switch class="chart-container__switch" v-model="isN">
+      <vs-switch
+        @input="switchType($event)"
+        :value="isN"
+        style="margin-bottom: 24px;"
+        class="chart-container__switch"
+      >
         <span slot="on">n</span>
         <span slot="off">t</span>
       </vs-switch>
+      <vs-button
+        style="margin-bottom: 16px;"
+        :disabled="pinnedXs.length === maxPinnedXs"
+        @click="pinSliderValue"
+        color="primary"
+        type="filled"
+      >Закрепить график</vs-button>
+      <vs-chip
+        style="margin-bottom: 8px;"
+        v-for="(x, index) in pinnedXs"
+        :key="index"
+        closable
+        :color="colors[index]"
+        close-icon="close"
+        @click="removeDataset(index)"
+      >{{ isN ? "n" : "t" }} = {{ x }}</vs-chip>
     </div>
-    <vs-slider class="chart-container__slider" ticks step="1" max=100 v-model="slider"/>
+    <div class="chart-container__x-controls">
+      <vs-slider
+        class="chart-container__x-controls-slider"
+        ticks
+        step="1"
+        :max="maxXValue"
+        :min="minXValue"
+        @input="updateXValue"
+        :value="pinnedXs[currentDatasetIndex]"
+      />
+
+      <vs-input
+        class="chart-container__x-controls-input"
+        size="large"
+        @input="updateXValue"
+        @keydown.enter="pinSliderValue"
+        :value="pinnedXs[currentDatasetIndex]"
+      />
+    </div>
   </div>
 </template>
 
 <script>
+import {
+  flow,
+  prop,
+  toPairs,
+  max,
+  min,
+  map,
+  throttle,
+  filter,
+  flatMap,
+  isNaN
+} from "lodash/fp";
+import { validate } from "validate.js";
 import LineChart from "./LineChart.js";
 
-let _seed = Date.now()
-
-const rand = function(min, max) {
-  var seed = _seed;
-  min = min === undefined ? 0 : min;
-  max = max === undefined ? 1 : max;
-  _seed = (seed * 9301 + 49297) % 233280;
-  return min + (_seed / 233280) * (max - min);
-};
-
-const chartColors = {
-  red: "rgb(255, 99, 132)",
-  orange: "rgb(255, 159, 64)",
-  yellow: "rgb(255, 205, 86)",
-  green: "rgb(75, 192, 192)",
-  blue: "rgb(54, 162, 235)",
-  purple: "rgb(153, 102, 255)",
-  grey: "rgb(201, 203, 207)"
-};
-
-var MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December"
-];
-
-var COLORS = [
+const COLORS = [
   "#4dc9f6",
   "#f67019",
   "#f53794",
@@ -63,82 +81,79 @@ var COLORS = [
   "#8549ba"
 ];
 
-// DEPRECATED
-const randomScalingFactor = function() {
-  return Math.round(rand(-100, 100));
-};
+const createThrottledUpdate = (self, fn, delay) =>
+  throttle(delay, (...args) => fn.call(self, ...args));
 
 export default {
   components: {
     LineChart
   },
+
   data() {
     return {
-      slider: 0,
-      isN: false,
-      data: {
-        labels: [
-          "January",
-          "February",
-          "March",
-          "April",
-          "May",
-          "June",
-          "July"
-        ],
-        datasets: [
-          {
-            label: "Unfilled",
-            fill: false,
-            backgroundColor: chartColors.blue,
-            borderColor: chartColors.blue,
-            data: [
-              randomScalingFactor(),
-              randomScalingFactor(),
-              randomScalingFactor(),
-              randomScalingFactor(),
-              randomScalingFactor(),
-              randomScalingFactor(),
-              randomScalingFactor()
-            ]
-          },
-          {
-            label: "Dashed",
-            fill: false,
-            backgroundColor: chartColors.green,
-            borderColor: chartColors.green,
-            borderDash: [5, 5],
-            data: [
-              randomScalingFactor(),
-              randomScalingFactor(),
-              randomScalingFactor(),
-              randomScalingFactor(),
-              randomScalingFactor(),
-              randomScalingFactor(),
-              randomScalingFactor()
-            ]
-          },
-          {
-            label: "Filled",
-            backgroundColor: chartColors.red,
-            borderColor: chartColors.red,
-            data: [
-              randomScalingFactor(),
-              randomScalingFactor(),
-              randomScalingFactor(),
-              randomScalingFactor(),
-              randomScalingFactor(),
-              randomScalingFactor(),
-              randomScalingFactor()
-            ],
-            fill: true
-          }
-        ]
-      },
-      options: {
+      isN: true,
+      updateXValue: null,
+      pinnedXs: [0],
+      currentDatasetIndex: 0,
+      colors: COLORS,
+      maxPinnedXs: 5
+    };
+  },
+
+  props: {
+    data: {
+      type: null,
+    },
+  },
+
+  computed: {
+    parsedData() {
+      return flow(
+        toPairs,
+        flatMap(([t, values]) =>
+          values.map((value, n) => ({ t: Number.parseInt(t, 10), n, value }))
+        )
+      )(this.data);
+    },
+
+    chartData() {
+      return {
+        datasets: this.pinnedXs.map((x, index) => {
+          const range = this.pickDataForXValue(x);
+          const mapped = this.mapDataForChartData(range);
+
+          return this.createDataset(mapped, COLORS[index]);
+        })
+      };
+    },
+
+    maxXValue() {
+      return this.parsedData.length === 0
+        ? 100
+        : flow(
+            map(prop(this.isN ? "n" : "t")),
+            max
+          )(this.parsedData);
+    },
+
+    minXValue() {
+      return this.parsedData.length === 0
+        ? 0
+        : flow(
+            map(prop(this.isN ? "n" : "t")),
+            min
+          )(this.parsedData);
+    },
+
+    options() {
+      return {
         responsive: true,
+        animation: false,
+        legend: {
+          display: false
+        },
         tooltips: {
-          mode: "index",
+          mode: "point",
           intersect: false
         },
         hover: {
@@ -149,40 +164,110 @@ export default {
           xAxes: [
             {
               display: true,
+              type: "linear"
             }
           ],
           yAxes: [
             {
               display: true,
+              ticks: {
+                beginAtZero: true
+              }
             }
           ]
         }
-      }
-    };
+      };
+    }
   },
+
   created() {
-    // this.fillData();
+    this.updateXValue = createThrottledUpdate(
+      this,
+      function(value) {
+        const newValue = this.getPrettyValue(value);
+        const currentValue = this.pinnedXs[this.currentDatasetIndex];
+        const valueToSet = newValue === null ? currentValue : newValue;
+
+        this.$set(this.pinnedXs, this.currentDatasetIndex, valueToSet);
+      },
+      200
+    );
   },
+
   methods: {
-    fillData() {
-      this.datacollection = {
-        labels: [this.getRandomInt(), this.getRandomInt()],
-        datasets: [
-          {
-            label: "Data One",
-            backgroundColor: "#f87979",
-            data: [this.getRandomInt(), this.getRandomInt()]
-          },
-          {
-            label: "Data One",
-            backgroundColor: "#f87979",
-            data: [this.getRandomInt(), this.getRandomInt()]
-          }
-        ]
+    getPrettyValue(x) {
+      const num = Number.parseInt(x, 10);
+
+      if (x === "") {
+        return 0;
+      }
+
+      if (isNaN(num)) {
+        return null;
+      }
+
+      if (num > this.maxXValue) {
+        return this.maxXValue;
+      }
+
+      if (num < this.minXValue) {
+        return this.minXValue;
+      }
+
+      return num;
+    },
+
+    pickDataForXValue(x) {
+      const key = this.isN ? "n" : "t";
+
+      return filter(point => point[key] === x, this.parsedData);
+    },
+
+    mapDataForChartData(data) {
+      return data.map(({ n, value, t }) => ({
+        y: value,
+        x: this.isN ? t : n
+      }));
+    },
+
+    createDataset(data, color) {
+      return {
+        fill: false,
+        backgroundColor: color,
+        borderColor: color,
+        pointHitRadius: 3,
+        label: "",
+        pointRadius: 3,
+        data: data
       };
     },
-    getRandomInt() {
-      return Math.floor(Math.random() * (50 - 5 + 1)) + 5;
+
+    pinSliderValue() {
+      const tailIndex = this.pinnedXs.length - 1;
+      const tail = this.pinnedXs[tailIndex];
+      this.pinnedXs.push(tail);
+
+      this.currentDatasetIndex = tailIndex + 1;
+    },
+
+    removeDataset(index) {
+      if (this.currentDatasetIndex - 1 < 0) {
+        this.currentDatasetIndex += 1;
+      } else {
+        this.currentDatasetIndex -= 1;
+      }
+
+      this.pinnedXs.splice(index, 1);
+      const [removedColor] = this.colors.splice(index, 1);
+
+      this.colors.push(removedColor);
+    },
+
+    switchType(isN) {
+      this.currentDatasetIndex = 0;
+      this.pinnedXs = [0];
+
+      this.isN = isN;
     }
   }
 };
@@ -198,6 +283,10 @@ export default {
   &__container {
     width: 400px;
     position: relative;
+  }
+
+  &__header.vs-divider {
+    margin-top: 0px;
   }
 
   &__chips {
@@ -217,6 +306,20 @@ export default {
 
   &__slider.con-vs-slider {
     margin-top: 32px;
+  }
+
+  &__x-controls {
+    display: flex;
+    margin-top: 24px;
+    width: 100%;
+
+    &-slider.con-vs-slider {
+      margin-right: 24px;
+
+      .text-circle-slider.vs-slider--circle-text {
+        display: none;
+      }
+    }
   }
 }
 </style>
