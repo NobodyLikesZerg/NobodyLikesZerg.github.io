@@ -27,6 +27,7 @@ export default {
         }
     },
     methods: {
+
         createScene(pathesWithRadiuses, spheres) {
             var canvas = this.$el;
             var engine = new BABYLON.Engine(canvas, true);
@@ -48,10 +49,48 @@ export default {
                 new BABYLON.Vector3(0, 50, 0),
                 scene
             );
-            var materialBox = new BABYLON.StandardMaterial("texture1", scene);
-            materialBox.diffuseColor = new BABYLON.Color3(0.7, 0, 0); //Green
+
+
+            var tubes = []
+            var selectedMesh
+
+            var defaultMaterial = new BABYLON.StandardMaterial("texture1", scene);
+            defaultMaterial.diffuseColor = new BABYLON.Color3(0.7, 0, 0);
+
+            var selectedMaterial = new BABYLON.StandardMaterial("texture2", scene);
+            selectedMaterial.diffuseColor = new BABYLON.Color3(0, 0.7, 0);
+
+            var hoveredMaterial = new BABYLON.StandardMaterial("texture3", scene);
+            hoveredMaterial.diffuseColor = BABYLON.Color3.White();
+
+            var selectTube = function(meshEvent) {
+                for (mesh of tubes) {
+                    mesh.material = defaultMaterial;
+                }
+                if (meshEvent.meshUnderPointer == selectedMesh) {
+                    selectedMesh.material = hoveredMaterial
+                    selectedMesh = null
+                } else {
+                    selectedMesh = meshEvent.meshUnderPointer
+                    meshEvent.meshUnderPointer.material = selectedMaterial;
+                }
+            }
+
+            var hoverTube = function(meshEvent) {
+                if (selectedMesh != meshEvent.meshUnderPointer) {
+                    meshEvent.meshUnderPointer.material = hoveredMaterial
+                }
+            }
+
+            var clearHovering = function(meshEvent) {
+                if (selectedMesh != meshEvent.meshUnderPointer) {
+                    meshEvent.meshUnderPointer.material = defaultMaterial
+                }
+            }
 
             for (var pathWithRadius of pathesWithRadiuses) {
+
+
                 var mesh = BABYLON.MeshBuilder.CreateTube(
                     "tube", {
                         path: pathWithRadius[0],
@@ -61,12 +100,24 @@ export default {
                     },
                     scene
                 );
-                mesh.material = materialBox
+                mesh.material = defaultMaterial
+                mesh.actionManager = new BABYLON.ActionManager(scene);
+                mesh.actionManager.registerAction(
+                    new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, selectTube)
+                );
+                mesh.actionManager.registerAction(
+                    new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPointerOutTrigger, clearHovering)
+                );
+                mesh.actionManager.registerAction(
+                    new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPointerOverTrigger, hoverTube)
+                );
+
+                tubes.push(mesh)
             }
             for (var sphere of spheres) {
                 var mesh = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 0.15 }, scene);
                 mesh.position = new BABYLON.Vector3(sphere[0], sphere[1], sphere[2]);
-                mesh.material = materialBox
+                mesh.material = defaultMaterial
             }
             engine.runRenderLoop(function() {
                 scene.render();
@@ -79,7 +130,6 @@ export default {
 
         createSpheres(edges) {
             var spheres = [edges.map(edge => edge[0]), edges.map(edge => edge[edge.length - 1])].flat(1);
-            console.log(spheres);
             return spheres;
         },
 
