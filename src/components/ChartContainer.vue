@@ -137,10 +137,6 @@ export default {
       },
       options: {
         responsive: true,
-        title: {
-          display: true,
-          text: "Chart.js Line Chart"
-        },
         tooltips: {
           mode: "index",
           intersect: false
@@ -153,19 +149,11 @@ export default {
           xAxes: [
             {
               display: true,
-              scaleLabel: {
-                display: true,
-                labelString: "Month"
-              }
             }
           ],
           yAxes: [
             {
               display: true,
-              scaleLabel: {
-                display: true,
-                labelString: "Value"
-              }
             }
           ]
         }
