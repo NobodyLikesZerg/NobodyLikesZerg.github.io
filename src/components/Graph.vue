@@ -1,5 +1,7 @@
 <template>
-  <canvas id="graph"/>
+  <div class="graph-container">
+    <canvas ref="graph" id="graph"/>
+  </div>
 </template>
 
 <script>
@@ -34,7 +36,7 @@ export default {
   },
   methods: {
     createScene(pathesWithRadiuses, spheres) {
-      var canvas = this.$el;
+      var canvas = this.$refs.graph;
       var engine = new BABYLON.Engine(canvas, true);
       const scene = new BABYLON.Scene(engine);
 
@@ -244,6 +246,12 @@ export default {
 </script>
 
 <style>
+.graph-container {
+  width: 100%;
+  height: 100%;
+  background-color: #33334c;
+}
+
 #graph {
   width: 100%;
   height: 100%;

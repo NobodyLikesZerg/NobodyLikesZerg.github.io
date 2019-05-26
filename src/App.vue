@@ -59,7 +59,8 @@ export default {
 
 .app-container {
   &--sidebar-opened {
-    width: calc(100% - 400px);
+    width: calc(100% - 600px);
+    transition: width ease .4s;
   }
 
   &--sidebar-closed {
@@ -73,6 +74,10 @@ export default {
     position: absolute;
     bottom: 24px;
     left: 24px;
+
+    &:hover {
+      box-shadow: 0 8px 25px -8px #111;
+    }
   }
 }
 
