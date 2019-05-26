@@ -1,6 +1,6 @@
 import Vue from "vue";
 import App from "./App.vue";
-import { vsDivider, vsIcon, vsInput, vsButton, vsChip, vsSlider, vsSpacer, vsSideBar, vsSwitch } from 'vuesax'
+import { vsRow, vsCol, vsDivider, vsCard, vsIcon, vsInput, vsButton, vsChip, vsSlider, vsSpacer, vsSideBar, vsSwitch } from 'vuesax'
 import 'vuesax/dist/vuesax.css'
 
 
@@ -13,6 +13,9 @@ Vue.use(vsChip);
 Vue.use(vsIcon);
 Vue.use(vsInput);
 Vue.use(vsDivider);
+Vue.use(vsCard);
+Vue.use(vsRow);
+Vue.use(vsCol);
 
 Vue.config.productionTip = false;
 

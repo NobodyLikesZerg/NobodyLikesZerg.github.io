@@ -10,8 +10,16 @@
       <chart-container/>
     </side-bar>
     <div class="container">
-      <file-uploader @input="fileContent = $event"/>
+      <file-upload-dialog v-if="fileContent == null" @input="fileContent = $event"/>
+
       <graph @input="data = $event" :data="fileContent"/>
+      <template v-if="fileContent != null">
+        <vs-button
+          @click="fileContent = null; data = null"
+          class="app-container__reset-button"
+          type="gradient"
+        >Загрузить новый файл</vs-button>
+      </template>
     </div>
   </div>
 </template>
@@ -19,8 +27,8 @@
 <script>
 import SideBar from "./components/SideBar";
 import Graph from "./components/Graph";
-import FileUploader from "./components/FileUploader";
 import ChartContainer from "./components/ChartContainer";
+import FileUploadDialog from "./components/FileUploadDialog";
 
 export default {
   name: "app",
@@ -32,16 +40,16 @@ export default {
   },
   components: {
     Graph,
-    FileUploader,
     SideBar,
-    ChartContainer
+    ChartContainer,
+    FileUploadDialog,
   }
 };
 </script>
 
 <style lang="stylus">
 #app {
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
@@ -59,14 +67,20 @@ export default {
   }
 
   height: 100%;
+
+  &__reset-button.vs-button {
+    font-size: 14px;
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+  }
 }
 
 .container {
   height: 100%;
 }
 
-html,
-body {
+html, body {
   overflow: hidden;
   width: 100%;
   height: 100%;

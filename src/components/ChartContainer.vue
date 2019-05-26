@@ -1,35 +1,41 @@
 <template>
   <div class="chart-container">
-    <vs-divider class="chart-container__header">Давление</vs-divider>
+    <vs-divider class="chart-container__header"><h1>Давление</h1></vs-divider>
     <div class="chart-container__container">
       <line-chart :options="options" :chart-data="chartData"></line-chart>
     </div>
-    <div class="chart-container__chips">
+    <div class="chart-container__actions">
+      <div class="chart-container__switch-container">
+      <label class="chart-container__switch-label" for="">Режим</label>
       <vs-switch
         @input="switchType($event)"
         :value="isN"
-        style="margin-bottom: 24px;"
         class="chart-container__switch"
       >
         <span slot="on">n</span>
         <span slot="off">t</span>
       </vs-switch>
+      </div>
+      <vs-divider />  
       <vs-button
-        style="margin-bottom: 16px;"
+        class="chart-container__button"
         :disabled="pinnedXs.length === maxPinnedXs"
         @click="pinSliderValue"
         color="primary"
         type="filled"
-      >Закрепить график</vs-button>
-      <vs-chip
-        style="margin-bottom: 8px;"
-        v-for="(x, index) in pinnedXs"
-        :key="index"
-        closable
-        :color="colors[index]"
-        close-icon="close"
-        @click="removeDataset(index)"
-      >{{ isN ? "n" : "t" }} = {{ x }}</vs-chip>
+      >Закрепить</vs-button>
+      
+      <div class="chart-container__chips">
+        <vs-chip
+          class="chart-container__chip"
+          v-for="(x, index) in pinnedXs"
+          :key="index"
+          closable
+          :color="colors[index]"
+          close-icon="close"
+          @click="removeDataset(index)"
+        >{{ isN ? "n" : "t" }} = {{ x }}</vs-chip>
+      </div>
     </div>
     <div class="chart-container__x-controls">
       <vs-slider
@@ -38,6 +44,7 @@
         step="1"
         :max="maxXValue"
         :min="minXValue"
+        :color="colors[currentDatasetIndex]"
         @input="updateXValue"
         :value="pinnedXs[currentDatasetIndex]"
       />
@@ -64,7 +71,8 @@ import {
   throttle,
   filter,
   flatMap,
-  isNaN
+  isNaN,
+  reverse,
 } from "lodash/fp";
 import { validate } from "validate.js";
 import LineChart from "./LineChart.js";
@@ -95,7 +103,7 @@ export default {
       updateXValue: null,
       pinnedXs: [0],
       currentDatasetIndex: 0,
-      colors: COLORS,
+      colors: [...COLORS],
       maxPinnedXs: 5
     };
   },
@@ -118,12 +126,12 @@ export default {
 
     chartData() {
       return {
-        datasets: this.pinnedXs.map((x, index) => {
+        datasets: reverse(this.pinnedXs.map((x, index) => {
           const range = this.pickDataForXValue(x);
           const mapped = this.mapDataForChartData(range);
 
-          return this.createDataset(mapped, COLORS[index]);
-        })
+          return this.createDataset(mapped, this.colors[index]);
+        }))
       };
     },
 
@@ -281,26 +289,74 @@ export default {
   flex-wrap: wrap;
 
   &__container {
-    width: 400px;
+    width: 380px;
     position: relative;
   }
 
   &__header.vs-divider {
     margin-top: 0px;
+    margin-bottom: 32px;
   }
 
   &__chips {
-    width: calc(100% - 400px);
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    position: relative;
+    width: 100%;
+
+    max-height: 110px;
+  }
+
+  &__chip.con-vs-chip {
+    width: 78px;
+    margin-bottom: 8px;
+    height: 16px;
+    // width: 100px;
+    font-size: 14px;
+
+    .vs-chip--text {
+      width: 40px;
+    }
+
+
+    &--active {
+      bottom: 0;
+      position: absolute;
+    }
+  }
+
+  &__actions {
+    width: calc(100% - 380px);
     display: flex;
     height: 400px;
-    padding-top: 36px;
+    padding-top: 8px;
     justify-content: flex-start;
     align-items: center;
     flex-direction: column;
+    padding-left: 12px;
+  }
+
+  &__switch-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content space-between
+  }
+
+  &__button {
+    font-size: 14px;
+    margin-bottom: 16px;
+    width: 100%;
+  }
+
+  &__switch-label {
+    margin-right: 8px;
+    font-family: system-ui, sans-serif;
   }
 
   &__switch {
-    transform: scale(1.5);
+    transform: scale(1.2);
     font-size: 17px;
   }
 
@@ -314,11 +370,16 @@ export default {
     width: 100%;
 
     &-slider.con-vs-slider {
-      margin-right: 24px;
+      margin-right: 12px;
 
       .text-circle-slider.vs-slider--circle-text {
         display: none;
       }
+    }
+
+    &-input.vs-input {
+      min-width: 172px;
+      padding-left: 12px;
     }
   }
 }
