@@ -1,22 +1,20 @@
 <template>
   <div class="chart-container">
-    <vs-divider class="chart-container__header"><h1>Давление</h1></vs-divider>
+    <vs-divider class="chart-container__header">
+      <h1>Давление</h1>
+    </vs-divider>
     <div class="chart-container__container">
-      <line-chart :options="options" :chart-data="chartData"></line-chart>
+      <line-chart :options="options" :datasets="datasets"></line-chart>
     </div>
     <div class="chart-container__actions">
       <div class="chart-container__switch-container">
-      <label class="chart-container__switch-label" for="">Режим</label>
-      <vs-switch
-        @input="switchType($event)"
-        :value="isN"
-        class="chart-container__switch"
-      >
-        <span slot="on">n</span>
-        <span slot="off">t</span>
-      </vs-switch>
+        <label class="chart-container__switch-label" for>Режим</label>
+        <vs-switch @input="switchType($event)" :value="isN" class="chart-container__switch">
+          <span slot="on">n</span>
+          <span slot="off">t</span>
+        </vs-switch>
       </div>
-      <vs-divider />  
+      <vs-divider/>
       <vs-button
         class="chart-container__button"
         :disabled="pinnedXs.length === maxPinnedXs"
@@ -24,7 +22,7 @@
         color="primary"
         type="filled"
       >Закрепить</vs-button>
-      
+
       <div class="chart-container__chips">
         <vs-chip
           class="chart-container__chip"
@@ -72,7 +70,7 @@ import {
   filter,
   flatMap,
   isNaN,
-  reverse,
+  reverse
 } from "lodash/fp";
 import { validate } from "validate.js";
 import LineChart from "./LineChart.js";
@@ -110,8 +108,8 @@ export default {
 
   props: {
     data: {
-      type: null,
-    },
+      type: null
+    }
   },
 
   computed: {
@@ -124,15 +122,15 @@ export default {
       )(this.data);
     },
 
-    chartData() {
-      return {
-        datasets: reverse(this.pinnedXs.map((x, index) => {
+    datasets() {
+      return reverse(
+        this.pinnedXs.map((x, index) => {
           const range = this.pickDataForXValue(x);
           const mapped = this.mapDataForChartData(range);
 
           return this.createDataset(mapped, this.colors[index]);
-        }))
-      };
+        })
+      );
     },
 
     maxXValue() {
@@ -304,7 +302,6 @@ export default {
     flex-wrap: wrap;
     position: relative;
     width: 100%;
-
     max-height: 110px;
   }
 
@@ -318,7 +315,6 @@ export default {
     .vs-chip--text {
       width: 40px;
     }
-
 
     &--active {
       bottom: 0;
@@ -341,7 +337,7 @@ export default {
     display: flex;
     align-items: center;
     width: 100%;
-    justify-content space-between
+    justify-content: space-between;
   }
 
   &__button {
