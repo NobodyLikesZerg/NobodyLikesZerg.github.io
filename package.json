@@ -20,6 +20,7 @@
     "vue": "^2.6.10",
     "vue-chartjs": "^3.4.2",
     "vue-filepond": "^5.1.1",
+    "vue-slider-component": "^3.0.31",
     "vuesax": "^3.8.65"
   },
   "devDependencies": {

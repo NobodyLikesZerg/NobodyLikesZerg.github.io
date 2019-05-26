@@ -36,16 +36,22 @@
       </div>
     </div>
     <div class="chart-container__x-controls">
-      <vs-slider
-        class="chart-container__x-controls-slider"
-        ticks
-        step="1"
+      <vue-slider
+        @change="updateXValue"
+        :value="pinnedXs[currentDatasetIndex]"
+        :contain="true"
         :max="maxXValue"
         :min="minXValue"
-        :color="colors[currentDatasetIndex]"
-        @input="updateXValue"
-        :value="pinnedXs[currentDatasetIndex]"
-      />
+        :silent="true"
+        class="chart-container__x-controls-slider"
+        tooltip="none"
+        width="444px"
+      >
+       <template v-slot:process="{ start, end, style }">
+          <div class="vue-slider-process custom-class" :style="[style, { backgroundColor: colors[currentDatasetIndex] }]">
+          </div>
+       </template>
+      </vue-slider>
 
       <vs-input
         class="chart-container__x-controls-input"
@@ -271,7 +277,7 @@ export default {
 
     switchType(isN) {
       this.currentDatasetIndex = 0;
-      this.pinnedXs = [0];
+      this.$set(this, 'pinnedXs', [0]);
 
       this.isN = isN;
     }
@@ -356,7 +362,7 @@ export default {
     font-size: 17px;
   }
 
-  &__slider.con-vs-slider {
+  &__slider {
     margin-top: 32px;
   }
 
@@ -365,7 +371,7 @@ export default {
     margin-top: 24px;
     width: 100%;
 
-    &-slider.con-vs-slider {
+    &-slider {
       margin-right: 12px;
 
       .text-circle-slider.vs-slider--circle-text {

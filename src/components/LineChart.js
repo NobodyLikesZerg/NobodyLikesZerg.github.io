@@ -20,12 +20,13 @@ export default {
         ? oldDatasets.length
         : newDatasets.length;
 
+
       new Array(length).fill(1).forEach((_, index) => {
         const newItem = newDatasets[index];
         const oldItem = oldDatasets[index];
 
         if (newItem == null) {
-          this.$data._chart.config.data.datasets.splice(index, 1);
+          this.$data._chart.config.data.datasets.splice(index, 1, { data: [] });
         } else if (!isEqual(newItem, oldItem)) {
           this.$data._chart.config.data.datasets[index] = newItem;
         }

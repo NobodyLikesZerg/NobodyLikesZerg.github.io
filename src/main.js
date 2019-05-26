@@ -3,6 +3,12 @@ import App from "./App.vue";
 import { vsRow, vsCol, vsDivider, vsCard, vsIcon, vsInput, vsButton, vsChip, vsSlider, vsSpacer, vsSideBar, vsSwitch } from 'vuesax'
 import 'vuesax/dist/vuesax.css'
 
+import VueSlider from 'vue-slider-component'
+import 'vue-slider-component/theme/default.css'
+
+
+Vue.component('VueSlider', VueSlider)
+
 
 Vue.use(vsButton);
 Vue.use(vsSideBar);
