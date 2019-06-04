@@ -56,6 +56,11 @@ export default {
         new BABYLON.Vector3(0, 50, 0),
         scene
       );
+      var light = new BABYLON.HemisphericLight(
+        "hemi",
+        new BABYLON.Vector3(0, -50, 0),
+        scene
+      );
 
       var tubes = [];
       var selectedMesh;
