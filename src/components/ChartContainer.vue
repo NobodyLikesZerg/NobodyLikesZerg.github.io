@@ -272,6 +272,13 @@ export default {
       }
 
       this.pinnedXs.splice(index, 1);
+
+      if (this.pinnedXs.length == 0) {
+        this.pinnedXs.push(0);
+        this.currentDatasetIndex = 0;
+        return;
+      }
+
       const [removedColor] = this.colors.splice(index, 1);
 
       this.colors.push(removedColor);
@@ -370,6 +377,7 @@ export default {
 
   &__x-controls {
     display: flex;
+    align-items: center;
     margin-top: 24px;
     width: 100%;
 
