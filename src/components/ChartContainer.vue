@@ -255,11 +255,13 @@ export default {
     },
 
     pinSliderValue() {
-      const tailIndex = this.pinnedXs.length - 1;
-      const tail = this.pinnedXs[tailIndex];
-      this.pinnedXs.push(tail);
+      if (this.pinnedXs.length < this.maxPinnedXs) {
+        const tailIndex = this.pinnedXs.length - 1;
+        const tail = this.pinnedXs[tailIndex];
+        this.pinnedXs.push(tail);
 
-      this.currentDatasetIndex = tailIndex + 1;
+        this.currentDatasetIndex = tailIndex + 1;
+      }
     },
 
     removeDataset(index) {
